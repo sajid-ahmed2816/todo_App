@@ -1,6 +1,6 @@
 import { Box, Grid, TextField, Button, Paper, IconButton } from '@mui/material';
-import { ModeEdit, Delete, Task, AddCircle, ArrowRight, CheckCircle, Backspace } from '@mui/icons-material';
-import { useState, useEffect } from 'react';
+import { ModeEdit, Delete, Task, AddCircle, ArrowRight, CheckCircle, Backspace, Check } from '@mui/icons-material';
+import { useState, useEffect, Fragment } from 'react';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
@@ -14,6 +14,8 @@ function App() {
   const [todo, setTodo] = useState([]);
   const [updateTrigger, setUpdateTrigger] = useState(false);
   const [completeTodos, setCompleteTodos] = useState([]);
+  const [edit, setEdit] = useState("");
+  const [updatedText, setUpdatedText] = useState("")
 
   const todoURL = "http://localhost:3001/api/todo/"
 
@@ -24,7 +26,6 @@ function App() {
     else {
       axios.post(todoURL, { item: data })
         .then((res) => {
-          console.log(res.data);
           setUpdateTrigger(!updateTrigger)
         })
         .catch((err) => {
@@ -42,7 +43,6 @@ function App() {
     const completed = iscompleted = true;
     axios.put(`${todoURL}completed/${id}`, { completed })
       .then((res) => {
-        console.log(res.data);
         setUpdateTrigger(!updateTrigger);
       })
       .catch((err) => {
@@ -52,40 +52,38 @@ function App() {
     if (completedTodo) {
       setTodo((prevTodos) => prevTodos.filter((todo) => todo._id !== id));
     }
-    console.log("id", id);
-    console.log(completedTodo);
-    console.log(completed)
   }
 
   function handleEdit(id, item) {
-    let updatedItem = { item: prompt("", item) };
+    setEdit(id)
+    setUpdatedText(item);
+  }
+
+  function handleUpdateTodo(id) {
+    let updatedItem = { item: updatedText };
     axios.put(`${todoURL}${id}`, updatedItem)
       .then((res) => {
-        console.log(res.data);
         setUpdateTrigger(!updateTrigger);
+        setEdit("");
       })
       .catch((err) => {
         console.log(err)
       })
-    console.log("id", id)
   }
 
   function handleDel(id) {
     axios.delete(`${todoURL}${id}`)
       .then((res) => {
-        console.log(res.data)
         setUpdateTrigger(!updateTrigger)
       })
       .catch((err) => {
         console.log(err)
       })
-    console.log("id", id)
   }
 
   function handleDeleteAll() {
     axios.delete(todoURL)
       .then((res) => {
-        console.log(res.data);
         setUpdateTrigger(!updateTrigger);
       })
       .catch((err) => {
@@ -96,20 +94,16 @@ function App() {
   function handleDelCompTodo(id) {
     axios.delete(`${todoURL}completed/${id}`)
       .then((res) => {
-        console.log(res.data)
         setUpdateTrigger(!updateTrigger)
       })
       .catch((err) => {
         console.log(err)
       })
-    console.log("id", id)
-
   }
 
   function handleClearAll() {
     axios.delete(`${todoURL}completed/delete/deleteall`)
       .then((res) => {
-        console.log(res.data);
         setUpdateTrigger(!updateTrigger);
       })
       .catch((err) => {
@@ -190,39 +184,56 @@ function App() {
           {todo.map((item, index) => (
             <Paper
               key={index}
-              variant='outlined'
+              variant={edit !== item?._id && 'outlined'}
               sx={{
                 marginBlock: "10px",
-                padding: "13.5px",
+                padding: edit === item?._id ? 0 : "13.5px",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center"
               }}
             >
-              <Box sx={{
-                display: "flex",
-              }}>
-                <ArrowRight />{item.item}
-              </Box>
-              <Box sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "5px"
-              }}>
-                <IconButton onClick={() => handleComplete(item._id, item.completed)}>
-                  <Task sx={{ color: "#388e3c" }} />
-                </IconButton>
-                <IconButton onClick={() => handleEdit(item._id, item.item)}>
-                  <ModeEdit sx={{ color: "#1976d2" }} />
-                </IconButton>
-                <IconButton onClick={() => handleDel(item._id)}>
-                  <Delete sx={{ color: "#c62828" }} />
-                </IconButton>
-              </Box>
+              {edit === item?._id ? (
+                <TextField
+                  value={updatedText}
+                  fullWidth
+                  onChange={(e) => setUpdatedText(e.target.value)}
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton onClick={() => handleUpdateTodo(item?._id)}>
+                        <Check />
+                      </IconButton>
+                    )
+                  }}
+                />
+              ) : (
+                <Fragment>
+                  <Box sx={{
+                    display: "flex",
+                  }}>
+                    <ArrowRight />{item.item}
+                  </Box>
+                  <Box sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px"
+                  }}>
+                    <IconButton onClick={() => handleComplete(item._id, item.completed)}>
+                      <Task sx={{ color: "#388e3c" }} />
+                    </IconButton>
+                    <IconButton onClick={() => handleEdit(item._id, item.item)}>
+                      <ModeEdit sx={{ color: "#1976d2" }} />
+                    </IconButton>
+                    <IconButton onClick={() => handleDel(item._id)}>
+                      <Delete sx={{ color: "#c62828" }} />
+                    </IconButton>
+                  </Box>
+                </Fragment>
+              )}
             </Paper>
           ))}
           {todo.length === 0 ?
-            "Please enter your to do" :
+            "No todos added yet" :
             <Button
               fullWidth
               variant='outlined'
