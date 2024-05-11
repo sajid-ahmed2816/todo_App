@@ -10,8 +10,8 @@ app.use(cors());
 app.use(express.json());
 // app.use("/api/todo", todoRoute);
 // app.use("/api/todo/completed", completeTodoRoute);
-app.use("https://todo-app-two-chi-42.vercel.app/api/todo", todoRoute);
-app.use("https://todo-app-two-chi-42.vercel.app/api/todo/completed", completeTodoRoute);
+app.use("https://todo-app-zeta-orcin.vercel.app", todoRoute);
+app.use("https://todo-app-zeta-orcin.vercel.app/api/todo/completed", completeTodoRoute);
 
 mongoose.connect(process.env.MONGO_URI)
   .then((
